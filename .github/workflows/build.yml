@@ -1,0 +1,23 @@
+name: Build
+run-name: ${{ inputs.orchestrator_runid && format('BuildingApp-Orch-{0}', inputs.orchestrator_runid) || 'Build' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      orchestrator_runid:
+        description: 'Orchestrator run ID'
+        required: false
+        type: string
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Simulate build
+      run: |
+        echo "This build process for application E"
+        sleep 30
