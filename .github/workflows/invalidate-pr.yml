@@ -2,23 +2,15 @@ name: Invalidate PR
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize]
+    branches: [ main ]
 
 jobs:
-  invalidate:
+  invalidate-prs:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Dispatch invalidate to orchestrator
+    - name: Dispatch invalidate
       run: |
-        gh api repos/e1083457/orchestrator/dispatches \
-          --method POST \
-          -f event_type=invalidate \
-          -f client_payload[repo]=repoE \
-          -f client_payload[pr_number]=$PR_NUMBER \
-          -f client_payload[sha]=$SHA
+        gh api /repos/${{ github.repository_owner }}/orchestrator/dispatches -f event_type=invalidate -f client_payload[action]=invalidate -f client_payload[branch]=${{ github.head_ref }}
       env:
         GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOWS }}
-        PR_NUMBER: ${{ github.event.pull_request.number }}
-        SHA: ${{ github.event.pull_request.head.sha }}
