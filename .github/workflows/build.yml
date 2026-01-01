@@ -19,6 +19,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    - name: Test echo
+      run: echo "test"
     - name: Simulate build
       run: |
         echo "This build process for application E"
