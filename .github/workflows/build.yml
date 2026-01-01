@@ -2,6 +2,8 @@ name: Build
 run-name: ${{ inputs.orchestrator_runid && format('BuildingApp-Orch-{0}', inputs.orchestrator_runid) || 'Build' }}
 
 on:
+  repository_dispatch:
+    types: [orchestrate-success]
   workflow_dispatch:
     inputs:
       orchestrator_runid:
@@ -14,7 +16,20 @@ on:
     branches: [ main ]
 
 jobs:
+  invalidate-prs:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch invalidate
+        run: |
+          gh api repos/${{ github.repository_owner }}/orchestrator/dispatches \
+            -f event_type=invalidate \
+            -f client_payload[head_sha]=${{ github.event.pull_request.head.sha }} \
+            -f client_payload[repo]=${{ github.event.repository.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOWS }}
   build:
+    if: github.event_name != 'repository_dispatch'
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -23,3 +38,18 @@ jobs:
       run: |
         echo "This build process for application E"
         sleep 5
+  post-orchestrator-status:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'orchestrate-success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post check run
+        run: |
+          gh api repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/check-runs \
+            -f name=orchestrator-build \
+            -f head_sha=${{ github.event.client_payload.head_sha }} \
+            -f status=completed \
+            -f conclusion=success \
+            -F output.title="Orchestrator Build" \
+            -F output.summary="Build completed successfully via orchestrator"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
