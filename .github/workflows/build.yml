@@ -8,12 +8,6 @@ on:
         description: 'Orchestrator run ID'
         required: false
         type: string
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  repository_dispatch:
-    types: [orchestrate-success]
 
 jobs:
   build:
@@ -21,19 +15,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    - name: Test echo
-      run: echo "test"
     - name: Simulate build
       run: |
+        ls -l
+        cat repoE.txt || true
         echo "This build process for application E"
         sleep 5
-  post-orchestrator-status:
-    if: github.event_name == 'repository_dispatch' && github.event.action == 'orchestrate-success'
-    runs-on: ubuntu-latest
-    steps:
-    - name: Post orchestrator-build check run
-      run: |
-        head_sha="${{ github.event.client_payload.head_sha }}"
-        gh api -X POST /repos/${{ github.repository }}/check-runs -f name=orchestrator-build -f head_sha=$head_sha -f status=completed -f conclusion=success -f output[title]="All builds passed" -f output[summary]="Orchestration completed successfully"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
