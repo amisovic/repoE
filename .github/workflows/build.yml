@@ -10,10 +10,6 @@ on:
         description: 'Orchestrator run ID'
         required: false
         type: string
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   invalidate-prs:
@@ -36,6 +32,8 @@ jobs:
       uses: actions/checkout@v4
     - name: Simulate build
       run: |
+        ls -l
+        cat repoE.txt || true
         echo "This build process for application E"
         sleep 5
   post-orchestrator-status:

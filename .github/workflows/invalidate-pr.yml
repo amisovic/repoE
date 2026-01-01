@@ -1,0 +1,24 @@
+name: Invalidate PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  invalidate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Dispatch invalidate to orchestrator
+      run: |
+        gh api repos/e1083457/orchestrator/dispatches \
+          --method POST \
+          -f event_type=invalidate \
+          -f client_payload[repo]=repoE \
+          -f client_payload[pr_number]=$PR_NUMBER \
+          -f client_payload[sha]=$SHA
+      env:
+        GITHUB_TOKEN: ${{ secrets.PAT_WORKFLOWS }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        SHA: ${{ github.event.pull_request.head.sha }}

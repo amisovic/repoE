@@ -1,0 +1,24 @@
+name: Post Orchestrator Status
+
+on:
+  repository_dispatch:
+    types: [orchestrate-success]
+
+permissions:
+  statuses: write
+
+jobs:
+  post-status:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Post orchestrator-build status
+      run: |
+        head_sha="${{ github.event.client_payload.head_sha }}"
+        gh api repos/${{ github.repository }}/statuses/$head_sha \
+          --method POST \
+          -f state=success \
+          -f context=orchestrator-build \
+          -f description="All builds passed" \
+          -f target_url="${{ github.event.client_payload.target_url }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
